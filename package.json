@@ -1,0 +1,14 @@
+{
+  "name": "v.a.l.e.t",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "author": "Rodrigo Espinosa de los Monteros",
+  "license": "MIT",
+  "dependencies": {
+    "cap": "^0.2.1"
+  }
+}
