@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>MAC Address Submission</title>
+	<script>
+		async function submitLoginForm (event) {
+			event.preventDefault();
+
+			try {
+				const response = await fetch('http://localhost:8080/login', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json'
+					},
+					body: JSON.stringify({
+						email: btoa(document.getElementById('email').value),
+						password: btoa(document.getElementById('password').value)
+					}),
+				});
+
+				alert(await response.text());
+			} catch (error) {
+				alert('Error: ' + error);
+			}
+		}
+
+		function validateForm () {
+			const macAddress = document.getElementById('mac-address').value;
+			const macAddressRegex = /^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$/;
+			if (!macAddressRegex.test(macAddress)) {
+				document.getElementById('error-message').textContent = 'Invalid MAC address!';
+				return false;
+			} else {
+				document.getElementById('error-message').textContent = '';
+				return true;
+			}
+		}
+
+		function submitForm (event) {
+			event.preventDefault();
+
+			if (!validateForm()) {
+				return;
+			}
+
+			const macAddress = document.getElementById('mac-address').value;
+			const formData = `mac-address=${encodeURIComponent(macAddress)}`;
+
+			fetch('http://localhost:8080/macaddress', {
+				method: 'POST',
+				body: formData,
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+					'Accept': 'application/json'
+				}
+			})
+				.then(response => response.text())
+				.then(text => alert(text))
+				.catch(error => alert('Error: ' + error));
+		}
+	</script>
+</head>
+
+<body>
+	<h1>Recurse Center Login</h1>
+
+	<form onsubmit="submitLoginForm(event);">
+		<label for="email">Email:</label><br>
+		<input type="text" id="email" name="email" required><br>
+		<label for="password">Password:</label><br>
+		<input type="password" id="password" name="password" required><br><br>
+		<input type="submit" value="Submit">
+	</form>
+
+	<h1>Enter your MAC Address</h1>
+
+	<form onsubmit="submitForm(event);">
+		<label for="mac-address">MAC Address:</label><br>
+		<input type="text" id="mac-address" name="mac-address" required
+			pattern="([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})"><br>
+		<small>Format: 00:00:00:00:00:00</small><br>
+		<span id="error-message" style="color: red;"></span><br>
+		<input type="submit" value="Submit">
+	</form>
+
+</body>
+
+</html>
