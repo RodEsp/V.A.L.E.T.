@@ -3,6 +3,7 @@
 
 <head>
 	<title>MAC Address Submission</title>
+	<link rel="stylesheet" href="index.css">
 	<script>
 		async function submitLoginForm (event) {
 			event.preventDefault();
@@ -20,13 +21,49 @@
 					}),
 				});
 
-				alert(await response.text());
+				let macAdresses = await response.json();
+
+				let macAddressList = document.getElementById('macAddressList');
+				for (macAddress of macAdresses) {
+					addMacAddressToList(macAddress);
+				}
+
+				document.getElementById('loginSection').classList.toggle('hidden');
+				document.getElementById('macaddressSection').classList.toggle('hidden');
 			} catch (error) {
 				alert('Error: ' + error);
 			}
 		}
 
-		function validateForm () {
+		async function submitMacAddressForm (event) {
+			event.preventDefault();
+
+			if (!validateMacAddressForm()) {
+				return;
+			}
+
+			const macAddress = document.getElementById('mac-address').value;
+			const formData = `mac-address=${encodeURIComponent(macAddress)}`;
+
+			try {
+				const response = await fetch('http://localhost:8080/macaddress', {
+					method: 'POST',
+					body: formData,
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+						'Accept': 'application/json'
+					}
+				});
+
+				const macAddress = await response.text();
+
+				addMacAddressToList(macAddress);
+			} catch (error) {
+				error => alert('Error: ' + error);
+			}
+		}
+
+		function validateMacAddressForm () {
 			const macAddress = document.getElementById('mac-address').value;
 			const macAddressRegex = /^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$/;
 			if (!macAddressRegex.test(macAddress)) {
@@ -38,53 +75,86 @@
 			}
 		}
 
-		function submitForm (event) {
-			event.preventDefault();
+		async function deleteMacAddress (event) {
+			const li = event.target.parentElement;
+			const macAddress = li.textContent.replace('X', '').trim(); // Remove the 'X' from the button and trim whitespace
 
-			if (!validateForm()) {
-				return;
-			}
+			try {
+				const response = await fetch('http://localhost:8080/macAddress', {
+					method: 'DELETE',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ macAddress })
+				});
 
-			const macAddress = document.getElementById('mac-address').value;
-			const formData = `mac-address=${encodeURIComponent(macAddress)}`;
-
-			fetch('http://localhost:8080/macaddress', {
-				method: 'POST',
-				body: formData,
-				headers: {
-					'Content-Type': 'application/x-www-form-urlencoded',
-					'Accept': 'application/json'
+				if (response.status === 200) {
+					li.remove();
+				} else {
+					alert(`${response.status} Error deleting MAC address: ${macAddress}`);
 				}
-			})
-				.then(response => response.text())
-				.then(text => alert(text))
-				.catch(error => alert('Error: ' + error));
+			} catch (error) {
+				console.error('Error:', error);
+				alert('Error deleting MAC address.');
+			}
+		}
+
+		function addMacAddressToList (macAddress) {
+			// Create an element with this format and append it to the MAC Address List
+			// <li>00:00:00:00:00:00<button title="Remove">X</button></li>
+			const li = document.createElement('li');
+			li.textContent = macAddress;
+
+			const button = document.createElement('button');
+			button.textContent = 'X';
+			button.setAttribute('title', 'Remove');
+			button.addEventListener('click', deleteMacAddress);
+
+
+			li.appendChild(button);
+			macAddressList.appendChild(li);
 		}
 	</script>
 </head>
 
 <body>
-	<h1>Recurse Center Login</h1>
+	<div id="loginSection" class="section">
+		<h1>Recurse Center Login</h1>
 
-	<form onsubmit="submitLoginForm(event);">
-		<label for="email">Email:</label><br>
-		<input type="text" id="email" name="email" required><br>
-		<label for="password">Password:</label><br>
-		<input type="password" id="password" name="password" required><br><br>
-		<input type="submit" value="Submit">
-	</form>
+		<form onsubmit="submitLoginForm(event);">
+			<label for="email">Email:</label><br>
+			<input type="text" id="email" name="email" required><br>
+			<label for="password">Password:</label><br>
+			<input type="password" id="password" name="password" required><br><br>
+			<input type="submit" value="Submit">
+		</form>
+	</div>
 
-	<h1>Enter your MAC Address</h1>
+	<div id="macaddressSection" class="section hidden">
+		<h1>Register a MAC Address</h1>
+		<button id="logoutButton">Logout</button>
 
-	<form onsubmit="submitForm(event);">
-		<label for="mac-address">MAC Address:</label><br>
-		<input type="text" id="mac-address" name="mac-address" required
-			pattern="([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})"><br>
-		<small>Format: 00:00:00:00:00:00</small><br>
-		<span id="error-message" style="color: red;"></span><br>
-		<input type="submit" value="Submit">
-	</form>
+		<form onsubmit="submitMacAddressForm(event);">
+			<label for="mac-address">MAC Address:</label><br>
+			<input type="text" id="mac-address" name="mac-address" required
+				pattern="([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})"><br>
+			<small>Format: 00:00:00:00:00:00</small><br>
+			<span id="error-message" style="color: red;"></span><br>
+			<input type="submit" value="Submit">
+		</form>
 
+		<h2>Registered MAC Addresses</h2>
+
+		<ul id="macAddressList">
+
+		</ul>
+	</div>
+
+	<script>
+		document.getElementById('logoutButton').addEventListener('click', function () {
+			window.location.href = '/';
+		});
+	</script>
 </body>
 
 </html>

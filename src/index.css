@@ -1,0 +1,29 @@
+h1 {
+	margin-bottom: 0px;
+}
+
+#logoutButton {
+	margin-bottom: 1.5em;
+}
+
+.hidden {
+	display: none;
+}
+
+.section {
+	margin: auto;
+	width: fit-content;
+}
+
+#macAddressList {
+	list-style-type: none;
+}
+
+#macAddressList>li {
+    display: flex;
+    justify-content: space-around;
+}
+
+#macAddressList>li>button {
+	line-height: 85%;
+}

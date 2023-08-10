@@ -47,7 +47,6 @@ app.post('/login', async (req, res) => {
 	const email = Buffer.from(req.body.email, 'base64').toString('utf-8');
 	const password = Buffer.from(req.body.password, 'base64').toString('utf-8');
 	console.log('/login', email, password);
-	const encodedCredentials = Buffer.from(`${email}:${password}`).toString('base64');
 
 	try {
 		let response = await fetch(`https://www.recurse.com/api/v1/profiles?query=${email}`, {
@@ -64,16 +63,14 @@ app.post('/login', async (req, res) => {
 		// We should only ever get a single user from a search for an e-mail address, so we can take the first result.
 		rc_user = response[0];
 
-		if (db.data.users[rc_user.id]) {
-			// TODO: If user exists don't re-request a PAT, just let them add or remove MAC addresses.
-
-		} else {
-			// Else create a new user and get a PAT for them.
+		let user = db.data.users[rc_user.id];
+		if (!user) {
+			// If the user does not exist create a new user and get a PAT for them.
 			try {
 				response = await fetch('https://www.recurse.com/api/v1/tokens', {
 					method: 'POST',
 					headers: {
-						'Authorization': `Basic ${encodedCredentials}`,
+						'Authorization': `Basic ${Buffer.from(`${email}:${password}`).toString('base64')}`,
 						'Content-Type': 'application/x-www-form-urlencoded',
 						'Accept': '*/*'
 					},
@@ -81,19 +78,20 @@ app.post('/login', async (req, res) => {
 				});
 
 				const data = await response.json();
-				db.data.users[rc_user.id] = {
+				user = {
 					email,
 					id: rc_user.id,
 					PAT: data.token, // TODO: Encrypt PAT
 					macAddresses: []
 				};
+				db.data.users[rc_user.id] = user;
 				db.write();
 			} catch (error) {
 				throw new Error(error.message);
 			}
 		}
 
-		res.status(200).send('Success');
+		res.status(200).send(user.macAddresses);
 	} catch (error) {
 		console.error(error);
 		res.status(500).send('Error logging in: ' + error.message);
@@ -119,7 +117,30 @@ app.post('/macaddress', async (req, res) => {
 	db.data.users[rc_user.id].macAddresses.push(macAddress);
 	await db.write(); // This writes it to db.json
 
-	res.send(`Received: ${macAddress}`);
+	res.status(200).send(macAddress);
+});
+
+app.delete('/macaddress', async (req, res) => {
+	// Log the request's body for debugging purposes
+	console.log(req.body);
+
+	const macAddress = req.body.macAddress;
+
+	try {
+		// Remove the MAC Address from the user's MAC Addresses
+		const user = db.data.users[rc_user.id];
+		const macAddressIndex = user.macAddresses.indexOf(macAddress);
+		user.macAddresses.splice(macAddressIndex, 1);
+
+		// Remove the MAC Address from the registered MAC Addresses
+		delete db.data.macAddresses[macAddress];
+		await db.write();
+
+		res.status(200).send(`Successfully deleted ${macAddress}`);
+	} catch (error) {
+		console.log(`Error deleting MAC Address: ${error.message}`);
+		res.status(500).send('Error deleting MAC Address.');
+	}
 });
 
 // Start server
