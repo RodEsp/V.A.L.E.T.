@@ -217,6 +217,21 @@ async function createVisit (macAddress) {
 	}
 }
 
+function throttle (cb, delay = 5000) {
+	let shouldWait = false;
+
+	return (...args) => {
+		if (shouldWait) return;
+
+		cb(...args);
+		shouldWait = true;
+		setTimeout(() => {
+			shouldWait = false;
+		}, delay);
+	};
+};
+const throttledCreateVisit = throttle(createVisit);
+
 cap.on('packet', async (nbytes, trunc) => {
 	if (linkType === 'ETHERNET') {
 		let packet = Cap.decoders.Ethernet(buffer);
@@ -224,6 +239,6 @@ cap.on('packet', async (nbytes, trunc) => {
 		// logPacketInfo(packet);
 
 		const macAddress = packet.info.sendermac;
-		createVisit(macAddress);
+		throttledCreateVisit(macAddress);
 	}
 });
