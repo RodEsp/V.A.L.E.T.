@@ -75,7 +75,7 @@ app.post('/login', async (req, res) => {
 						'Content-Type': 'application/x-www-form-urlencoded',
 						'Accept': '*/*'
 					},
-					body: 'description=V.A.L.E.T'
+					body: 'description=V.A.L.E.T.'
 				});
 
 				const data = await response.json();
