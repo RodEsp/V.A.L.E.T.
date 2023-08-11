@@ -1,18 +1,28 @@
-h1 {
+#versionTag {
+	font-style: italic;
+	position: relative;
+    top: -5px;
+    left: 10px;
+}
+
+h1, h2 {
 	margin-bottom: 0px;
 }
 
 #logoutButton {
-	margin-bottom: 1.5em;
+	width: 95%;
+    margin: auto;
 }
 
 .hidden {
-	display: none;
+	display: none !important;
 }
 
 .section {
 	margin: auto;
 	width: fit-content;
+	display: flex;
+    flex-direction: column;
 }
 
 #macAddressList {

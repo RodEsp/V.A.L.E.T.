@@ -2,7 +2,7 @@
 <html>
 
 <head>
-	<title>MAC Address Submission</title>
+	<title>V.A.L.E.T.</title>
 	<link rel="stylesheet" href="index.css">
 	<script>
 		async function submitLoginForm (event) {
@@ -118,8 +118,13 @@
 </head>
 
 <body>
+	<div class="section">
+		<h1>V.A.L.E.T.</h1>
+		<span id="versionTag">Beta</span>
+	</div>
+
 	<div id="loginSection" class="section">
-		<h1>Recurse Center Login</h1>
+		<h2>Recurse Center Login</h2>
 
 		<form onsubmit="submitLoginForm(event);">
 			<label for="email">Email:</label><br>
@@ -131,8 +136,9 @@
 	</div>
 
 	<div id="macaddressSection" class="section hidden">
-		<h1>Register a MAC Address</h1>
 		<button id="logoutButton">Logout</button>
+
+		<h2>Register a MAC Address</h2>
 
 		<form onsubmit="submitMacAddressForm(event);">
 			<label for="mac-address">MAC Address:</label><br>
