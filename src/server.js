@@ -181,13 +181,13 @@ async function createVisit (macAddress) {
 
 	const registeredMacAddress = db.data.macAddresses[macAddress];
 	if (registeredMacAddress !== undefined) {
-		const user_id = db.data.macAddresses[macAddress].user_id;
+		const user_id = registeredMacAddress.user_id;
 		const user = db.data.users[user_id];
 
 		// If a visit has already been created for a given MAC Address today then don't create another one.
 		// This is to avoid spamming the RC API with requests to create visits since we will likely see the same MAC Address many many times per day
 		//  Often we will see them many many times per minute because of the nature of ARP requests.
-		if (db.data.macAddresses[macAddress].last_visit_created_on !== today) {
+		if (user.last_visit_created_on !== today) {
 			console.log(`
 			Saw ${macAddress}
 			It belongs to ${user.email}
@@ -204,7 +204,7 @@ async function createVisit (macAddress) {
 					}
 				});
 
-				db.data.macAddresses[macAddress].last_visit_created_on = today;
+				user.last_visit_created_on = today;
 				db.write();
 			} catch (error) {
 				console.error(error);
