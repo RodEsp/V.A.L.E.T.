@@ -8,6 +8,8 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+// TODO: Use a log file instead of console.log() for errors and visit creation messages so that we ca debug issues if the server/computer crashes.
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Get the personal access token from a local file in './../pat'
@@ -46,7 +48,6 @@ app.get('/', (req, res) => {
 app.post('/login', async (req, res) => {
 	const email = Buffer.from(req.body.email, 'base64').toString('utf-8');
 	const password = Buffer.from(req.body.password, 'base64').toString('utf-8');
-	console.log('/login', email, password);
 
 	try {
 		let response = await fetch(`https://www.recurse.com/api/v1/profiles?query=${email}`, {
@@ -100,9 +101,6 @@ app.post('/login', async (req, res) => {
 
 // Save MAC Address when a user submits it
 app.post('/macaddress', async (req, res) => {
-	// Log the request's body for debugging purposes
-	console.log(req.body);
-
 	const macAddress = req.body['mac-address'];
 
 	// Validate the MAC address
@@ -113,7 +111,7 @@ app.post('/macaddress', async (req, res) => {
 	}
 
 	// Save the MAC address to the database
-	db.data.macAddresses[macAddress] = rc_user.id;
+	db.data.macAddresses[macAddress] = { user_id: rc_user.id, last_visit_created_on: undefined };
 	db.data.users[rc_user.id].macAddresses.push(macAddress);
 	await db.write(); // This writes it to db.json
 
@@ -121,9 +119,6 @@ app.post('/macaddress', async (req, res) => {
 });
 
 app.delete('/macaddress', async (req, res) => {
-	// Log the request's body for debugging purposes
-	console.log(req.body);
-
 	const macAddress = req.body.macAddress;
 
 	try {
@@ -134,6 +129,8 @@ app.delete('/macaddress', async (req, res) => {
 
 		// Remove the MAC Address from the registered MAC Addresses
 		delete db.data.macAddresses[macAddress];
+
+		// Persist the changes in the db
 		await db.write();
 
 		res.status(200).send(`Successfully deleted ${macAddress}`);
@@ -148,17 +145,18 @@ app.listen(port, () => {
 	console.log(`Server is running on http://localhost:${port}`);
 });
 
-// ------------- Monitor for MAC Addresses sending ARP packets on local network -------------
+/*
+ * The code below this line monitors the WiFi space for ARP packets and extracts the MAC Addresses of the senders of these packets
+ * If it sees a MAC Address that has been registered with the server above then it will create a RC Hub Visit for the user it pertains to, but only once per day.
+ */
 const PROTOCOL = Cap.decoders.PROTOCOL;
 
 // List all network devices on machine
 // console.log(JSON.stringify(Cap.deviceList(), null, 2));
 
 const cap = new Cap.Cap();
-// The device needs to be changes to the appropriate network device for the machine this is being run on, you can also use the IP address assigned to the machine with Cap.findDevice();
+// The device needs to be changed to the appropriate network device for the machine this is being run on, you can also use the IP address assigned to the machine with Cap.findDevice();
 const device = "en0"; // Cap.findDevice('10.100.2.85');
-
-console.log(`Device = ${device}`);
 
 const pcap_filter = 'arp'; // We are only interested in ARP packets - https://en.wikipedia.org/wiki/Address_Resolution_Protocol
 const bufSize = 10 * 1024 * 1024;
@@ -167,16 +165,6 @@ const buffer = Buffer.alloc(65535);
 const linkType = cap.open(device, pcap_filter, bufSize, buffer);
 
 cap.setMinBytes && cap.setMinBytes(0);
-
-const hexToIP = (hexString) => {
-	let bytes = hexString.match(/.{2}/g);
-
-	return bytes.reduce((acc, hexByte) => `${acc}.${parseInt(hexByte, 16)}`, '').substring(1);
-};
-
-const createVisit = (macAddress) => {
-
-};
 
 // Log packet info for debugging purposes
 function logPacketInfo (packet) {
@@ -188,32 +176,25 @@ function logPacketInfo (packet) {
   IPv4 Protocol: ${PROTOCOL.ETHERNET[packet.info.protocol]}`);
 };
 
-function get_rc_api_date () {
-	function pad (n) { return n < 10 ? '0' + n : n; }
-	const date = new Date();
-	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
+async function createVisit (macAddress) {
+	const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
 
-cap.on('packet', async (nbytes, trunc) => {
-	if (linkType === 'ETHERNET') {
-		let packet = Cap.decoders.Ethernet(buffer);
-		packet = Cap.decoders.ARP(buffer, packet.offset);
-		// logPacketInfo(packet);
+	const registeredMacAddress = db.data.macAddresses[macAddress];
+	if (registeredMacAddress !== undefined) {
+		const user_id = db.data.macAddresses[macAddress].user_id;
+		const user = db.data.users[user_id];
 
-		const macAddress = packet.info.sendermac;
-		const user_id = db.data.macAddresses[macAddress];
-		if (user_id !== undefined) {
-			const user = db.data.users[user_id];
-			const date = get_rc_api_date();
-
+		// If a visit has already been created for a given MAC Address today then don't create another one.
+		// This is to avoid spamming the RC API with requests to create visits since we will likely see the same MAC Address many many times per day
+		//  Often we will see them many many times per minute because of the nature of ARP requests.
+		if (db.data.macAddresses[macAddress].last_visit_created_on !== today) {
 			console.log(`
-			FOUND ${macAddress}
+			Saw ${macAddress}
 			It belongs to ${user.email}
-			Creating a visit on ${date} for them!`);
+			Creating a visit on ${today} for them!`);
 
 			try {
-				// TODO: Only create one visit per day per user.
-				const response = await fetch(`https://www.recurse.com/api/v1/hub_visits/${user_id}/${date}`, {
+				const response = await fetch(`https://www.recurse.com/api/v1/hub_visits/${user_id}/${today}`, {
 					method: 'PATCH',
 					headers: {
 						'User-Agent': 'V.A.L.E.T.',
@@ -223,10 +204,26 @@ cap.on('packet', async (nbytes, trunc) => {
 					}
 				});
 
-				console.log(await response.json());
+				db.data.macAddresses[macAddress].last_visit_created_on = today;
+				db.write();
 			} catch (error) {
 				console.error(error);
 			}
-		}
+		}/* else {
+			console.log(`
+			Visit for ${macAddress} has already been created today. Skipping.
+			It belongs to ${user.email}`);
+		}*/
+	}
+}
+
+cap.on('packet', async (nbytes, trunc) => {
+	if (linkType === 'ETHERNET') {
+		let packet = Cap.decoders.Ethernet(buffer);
+		packet = Cap.decoders.ARP(buffer, packet.offset);
+		// logPacketInfo(packet);
+
+		const macAddress = packet.info.sendermac;
+		createVisit(macAddress);
 	}
 });
