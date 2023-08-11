@@ -217,7 +217,7 @@ async function createVisit (macAddress) {
 	}
 }
 
-function throttle (cb, delay = 5000) {
+function throttle (cb, delay = 1000) {
 	let shouldWait = false;
 
 	return (...args) => {
