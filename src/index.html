@@ -9,31 +9,77 @@
 			event.preventDefault();
 
 			try {
-				const response = await fetch('http://localhost:8080/login', {
+				const response = await fetch('http://localhost/login', { // valet.recurse.com
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
 						'Accept': 'application/json'
 					},
 					body: JSON.stringify({
-						email: btoa(document.getElementById('email').value),
+						email: btoa(document.getElementById('email').value)
+					}),
+				});
+
+				if (response.ok) {
+					let user = await response.json();
+
+					const welcomeBanner = document.getElementById('welcomeBanner');
+					welcomeBanner.innerText = `Welcome ${user.name}!`;
+
+					if (user.hasPAT) {
+						document.getElementById('pat-generation').classList.toggle('hidden');
+						document.getElementById('pat-registered').classList.toggle('hidden');
+						document.getElementById('patTitle').style.marginBottom = '0';
+						document.getElementById('pat-not-registered').classList.toggle('hidden');
+						document.getElementById('mac-address-registration').classList.toggle('hidden');
+					}
+
+					const macAddressList = document.getElementById('macAddressList');
+					for (macAddress of user.macAddresses) {
+						addMacAddressToList(macAddress);
+					}
+
+					document.getElementById('loginSection').classList.toggle('hidden');
+					document.getElementById('macaddressSection').classList.toggle('hidden');
+				} else {
+					throw new Error(await response.text());
+				}
+			} catch (error) {
+				console.log('Could not log in.\n' + error);
+				alert(error);
+			}
+		}
+
+		async function submitPasswordForm (event) {
+			event.preventDefault();
+
+			try {
+				const response = await fetch('http://localhost/getPAT', { // valet.recurse.com
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json'
+					},
+					body: JSON.stringify({
 						password: btoa(document.getElementById('password').value)
 					}),
 				});
 
-				let macAdresses = await response.json();
-
-				let macAddressList = document.getElementById('macAddressList');
-				for (macAddress of macAdresses) {
-					addMacAddressToList(macAddress);
+				if (response.ok) {
+					document.getElementById('pat-generation').classList.toggle('hidden');
+					document.getElementById('pat-registered').classList.toggle('hidden');
+					document.getElementById('patTitle').style.marginBottom = '0';
+					document.getElementById('pat-not-registered').classList.toggle('hidden');
+					document.getElementById('mac-address-registration').classList.toggle('hidden');
+				} else {
+					throw new Error(await response.text());
 				}
-
-				document.getElementById('loginSection').classList.toggle('hidden');
-				document.getElementById('macaddressSection').classList.toggle('hidden');
 			} catch (error) {
-				alert('Error: ' + error);
+				console.log(error);
+				alert('Could not generate a PAT.\nCheck that your password is correct.');
 			}
-		}
+
+		};
 
 		async function submitMacAddressForm (event) {
 			event.preventDefault();
@@ -46,20 +92,24 @@
 			const formData = `mac-address=${encodeURIComponent(macAddress)}`;
 
 			try {
-				const response = await fetch('http://localhost:8080/macaddress', {
+				const response = await fetch('http://localhost/macaddress', { // valet.recurse.com
 					method: 'POST',
-					body: formData,
 					headers: {
 						'Content-Type': 'application/x-www-form-urlencoded',
 						'Accept': 'application/json'
-					}
+					},
+					body: formData
 				});
 
-				const macAddress = await response.text();
-
-				addMacAddressToList(macAddress);
+				if (response.ok) {
+					const macAddress = await response.text();
+					addMacAddressToList(macAddress);
+				} else {
+					throw new Error(await response.text());
+				}
 			} catch (error) {
-				error => alert('Error: ' + error);
+				console.log('Could not register MAC Address.\n' + error);
+				alert('Could not register MAC Address.');
 			}
 		}
 
@@ -80,7 +130,7 @@
 			const macAddress = li.textContent.replace('X', '').trim(); // Remove the 'X' from the button and trim whitespace
 
 			try {
-				const response = await fetch('http://localhost:8080/macAddress', {
+				const response = await fetch('http://localhost/macAddress', { // valet.recurse.com
 					method: 'DELETE',
 					headers: {
 						'Content-Type': 'application/json'
@@ -88,14 +138,14 @@
 					body: JSON.stringify({ macAddress })
 				});
 
-				if (response.status === 200) {
+				if (response.ok) {
 					li.remove();
 				} else {
-					alert(`${response.status} Error deleting MAC address: ${macAddress}`);
+					alert(`${response.status} error deleting MAC address: ${macAddress}`);
 				}
 			} catch (error) {
-				console.error('Error:', error);
-				alert('Error deleting MAC address.');
+				console.error('Could not delete MAC address.\n', error);
+				alert('Could not delete MAC address.');
 			}
 		}
 
@@ -124,30 +174,51 @@
 	</div>
 
 	<div id="loginSection" class="section">
-		<h2>Recurse Center Login</h2>
+		<h3>Login</h3>
 
 		<form onsubmit="submitLoginForm(event);">
-			<label for="email">Email:</label><br>
-			<input type="text" id="email" name="email" required><br>
-			<label for="password">Password:</label><br>
-			<input type="password" id="password" name="password" required><br><br>
+			<label for="email">Enter your Recurse Center email:</label>
+			<input type="text" id="email" name="email" required>
 			<input type="submit" value="Submit">
 		</form>
 	</div>
 
 	<div id="macaddressSection" class="section hidden">
+		<h3 id="welcomeBanner"></h3>
 		<button id="logoutButton">Logout</button>
+
+		<h3 id="patTitle">Generate a Personal Access Token</h3>
+		<div id="pat-generation">
+			<form onsubmit="submitPasswordForm(event);">
+				<label for="password">Enter your Recurse Center password:</label>
+				<input type="password" id="password" name="password" required>
+				<input type="submit" value="Submit">
+			</form>
+			<br>
+			<div class="center-text">Your password is not saved.<br>
+				We use it to generate a Personal Access Token<br>
+				that V.A.L.E.T. will use to create
+				<a target="_blank" href="https://github.com/recursecenter/wiki/wiki/Recurse-Center-API#hub-visits">Hub
+					Visits</a>
+				on your behalf.
+			</div>
+		</div>
+		<div id="pat-registered" class="hidden">&#9989; You have a registered PAT</div>
 
 		<h2>Register a MAC Address</h2>
 
-		<form onsubmit="submitMacAddressForm(event);">
-			<label for="mac-address">MAC Address:</label><br>
-			<input type="text" id="mac-address" name="mac-address" required
-				pattern="([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})"><br>
-			<small>Format: 00:00:00:00:00:00</small><br>
-			<span id="error-message" style="color: red;"></span><br>
-			<input type="submit" value="Submit">
-		</form>
+		<div id="pat-not-registered">&#10060; Please generate a Personal Access Token first.</div>
+
+		<div id="mac-address-registration" class="hidden">
+			<form onsubmit="submitMacAddressForm(event);">
+				<label for="mac-address">MAC Address:</label><br>
+				<input type="text" id="mac-address" name="mac-address" required
+					pattern="([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})"><br>
+				<small>Format: 00:00:00:00:00:00</small><br>
+				<span id="error-message" style="color: red;"></span><br>
+				<input type="submit" value="Submit">
+			</form>
+		</div>
 
 		<h2>Registered MAC Addresses</h2>
 

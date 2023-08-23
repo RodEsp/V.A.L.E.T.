@@ -8,7 +8,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-// TODO: Use a log file instead of console.log() for errors and visit creation messages so that we ca debug issues if the server/computer crashes.
+// TODO: Use a log file instead of console.log()/console.error() so that we ca debug issues if the server/computer crashes.
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,7 +18,7 @@ const pat = fs.readFileSync(path.join(__dirname, '..', 'pat')).toString();
 
 // Create express server
 const app = express();
-const port = 8080;
+const port = 80;
 app.use(express.static(path.join(__dirname)));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
@@ -44,59 +44,93 @@ app.get('/', (req, res) => {
 	res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// This endpoint acts as a CORS proxy for the Recurse Center API
 app.post('/login', async (req, res) => {
 	const email = Buffer.from(req.body.email, 'base64').toString('utf-8');
-	const password = Buffer.from(req.body.password, 'base64').toString('utf-8');
 
 	try {
-		let response = await fetch(`https://www.recurse.com/api/v1/profiles?query=${email}`, {
+		const response = await fetch(`https://www.recurse.com/api/v1/profiles?query=${email}`, {
 			method: 'GET',
 			headers: {
 				'Authorization': `Bearer ${pat}`
 			}
 		});
-		response = await response.json();
-		if (!Array.isArray(response) || response.length === 0) {
-			throw new Error('Could not find a user with that e-mail address.');
-		}
+		if (response.ok) {
+			const rc_users = await response.json();
+			if (Array.isArray(rc_users)) {
+				if (rc_users.length !== 0) {
+					// We should only ever get a single user from a search for an e-mail address, so we can take the first result.
+					rc_user = rc_users[0];
 
-		// We should only ever get a single user from a search for an e-mail address, so we can take the first result.
-		rc_user = response[0];
+					let user = db.data.users[rc_user.id];
+					// If the user does not exist create a new user 
+					if (!user) {
+						user = {
+							email,
+							id: rc_user.id,
+							PAT: undefined,
+							macAddresses: []
+						};
+						db.data.users[rc_user.id] = user;
+						db.write();
+					}
 
-		let user = db.data.users[rc_user.id];
-		if (!user) {
-			// If the user does not exist create a new user and get a PAT for them.
-			try {
-				response = await fetch('https://www.recurse.com/api/v1/tokens', {
-					method: 'POST',
-					headers: {
-						'Authorization': `Basic ${Buffer.from(`${email}:${password}`).toString('base64')}`,
-						'Content-Type': 'application/x-www-form-urlencoded',
-						'Accept': '*/*'
-					},
-					body: 'description=V.A.L.E.T.'
-				});
-
-				const data = await response.json();
-				user = {
-					email,
-					id: rc_user.id,
-					PAT: data.token, // TODO: Encrypt PAT
-					macAddresses: []
-				};
-				db.data.users[rc_user.id] = user;
-				db.write();
-			} catch (error) {
-				throw new Error(error.message);
+					res.status(200).send({ name: rc_user.name, macAddresses: user.macAddresses, hasPAT: user.PAT === undefined ? false : true });
+				} else {
+					// If the response length was 0 there is no user with that e-mail address at RC.
+					throw new Error('Could not find a user with that e-mail address.');
+				}
+			} else {
+				// If the response wasn't an array then something about the RC API changed.
+				throw new Error(`Recurse Center API returned unexpected results: ${rc_users}`);
 			}
+		} else {
+			// If the RC API returned something other than a 200 http status code.
+			throw new Error(`RC API Error
+			Status code: ${response.status}
+			Response: ${await response.text()}`);
 		}
-
-		res.status(200).send(user.macAddresses);
 	} catch (error) {
 		console.error(error);
-		res.status(500).send('Error logging in: ' + error.message);
+		if (error.message === 'Could not find a user with that e-mail address.') {
+			res.status(404).send(error.message);
+		} else {
+			res.status(500).send(error.message);
+		}
 	}
+});
+
+app.post('/getPAT', async (req, res) => {
+	const password = Buffer.from(req.body.password, 'base64').toString('utf-8');
+
+	try {
+		let user = db.data.users[rc_user.id];
+
+		const response = await fetch('https://www.recurse.com/api/v1/tokens', {
+			method: 'POST',
+			headers: {
+				'Authorization': `Basic ${Buffer.from(`${user.email}:${password}`).toString('base64')}`,
+				'Content-Type': 'application/x-www-form-urlencoded',
+				'Accept': '*/*'
+			},
+			body: 'description=V.A.L.E.T.'
+		});
+
+		if (response.ok) {
+			const data = await response.json();
+			user.PAT = data.token; // TODO: Encrypt PAT
+			db.write();
+
+			res.status(200).send();
+		} else {
+			throw new Error(`Recurse Center API Error: 
+			http status code: ${response.status},
+			message: ${await response.text()}`);
+		}
+	} catch (error) {
+		console.error('Failed to generate a PAT.\n' + error);
+		res.status(500).send('Failed to generate a PAT.');
+	}
+
 });
 
 // Save MAC Address when a user submits it
@@ -107,6 +141,12 @@ app.post('/macaddress', async (req, res) => {
 	const macAddressRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
 	if (!macAddressRegex.test(macAddress)) {
 		res.status(400).send('Invalid MAC address!');
+		return;
+	} else if (db.data.users[rc_user.id].macAddresses.includes(macAddress)) {
+		res.status(500).send('MAC Address is already registered for this user.');
+		return;
+	} else if (db.data.macAddresses[macAddress] !== undefined) {
+		res.status(500).send('This MAC Address has already been registered for a different user.');
 		return;
 	}
 
@@ -135,14 +175,14 @@ app.delete('/macaddress', async (req, res) => {
 
 		res.status(200).send(`Successfully deleted ${macAddress}`);
 	} catch (error) {
-		console.log(`Error deleting MAC Address: ${error.message}`);
+		console.error(`Error deleting MAC Address: ${error.message}`);
 		res.status(500).send('Error deleting MAC Address.');
 	}
 });
 
 // Start server
 app.listen(port, () => {
-	console.log(`Server is running on http://localhost:${port}`);
+	console.log(`Server is running on http:;//localhost:${port}`);
 });
 
 /*
@@ -188,26 +228,33 @@ async function createVisit (macAddress) {
 		// This is to avoid spamming the RC API with requests to create visits since we will likely see the same MAC Address many many times per day
 		//  Often we will see them many many times per minute because of the nature of ARP requests.
 		if (user.last_visit_created_on !== today) {
-			console.log(`
-			Saw ${macAddress}
-			It belongs to ${user.email}
-			Creating a visit on ${today} for them!`);
+			if (user.PAT !== undefined) {
+				console.log(`
+				Saw ${macAddress}
+				It belongs to ${user.email}
+				Creating a visit on ${today} for them!`);
 
-			try {
-				const response = await fetch(`https://www.recurse.com/api/v1/hub_visits/${user_id}/${today}`, {
-					method: 'PATCH',
-					headers: {
-						'User-Agent': 'V.A.L.E.T.',
-						'Authorization': `Bearer ${user.PAT}`,
-						'Content-Type': 'application/x-www-form-urlencoded',
-						'Accept': '*/*'
-					}
-				});
+				try {
+					const response = await fetch(`https://www.recurse.com/api/v1/hub_visits/${user_id}/${today}`, {
+						method: 'PATCH',
+						headers: {
+							'User-Agent': 'V.A.L.E.T.',
+							'Authorization': `Bearer ${user.PAT}`,
+							'Content-Type': 'application/x-www-form-urlencoded',
+							'Accept': '*/*'
+						}
+					});
 
-				user.last_visit_created_on = today;
-				db.write();
-			} catch (error) {
-				console.error(error);
+					user.last_visit_created_on = today;
+					db.write();
+				} catch (error) {
+					console.error(error);
+				}
+			} else {
+				console.log(`
+				Saw ${macAddress}
+				Tried to create a visit for ${user.email} on ${today}
+				But we do not have a PAT for them.`);
 			}
 		}/* else {
 			console.log(`

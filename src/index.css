@@ -1,3 +1,7 @@
+h1, h2 {
+	margin-bottom: 0px;
+}
+
 #versionTag {
 	font-style: italic;
 	position: relative;
@@ -5,24 +9,15 @@
     left: 10px;
 }
 
-h1, h2 {
-	margin-bottom: 0px;
+#welcomeBanner {
+	width: fit-content;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 #logoutButton {
-	width: 95%;
+	width: 99%;
     margin: auto;
-}
-
-.hidden {
-	display: none !important;
-}
-
-.section {
-	margin: auto;
-	width: fit-content;
-	display: flex;
-    flex-direction: column;
 }
 
 #macAddressList {
@@ -36,4 +31,19 @@ h1, h2 {
 
 #macAddressList>li>button {
 	line-height: 85%;
+}
+
+.section {
+	margin: auto;
+	width: fit-content;
+	display: flex;
+    flex-direction: column;
+}
+
+.hidden {
+	display: none !important;
+}
+
+.center-text {
+	text-align: center;
 }
