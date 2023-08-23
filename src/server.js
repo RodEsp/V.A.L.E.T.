@@ -14,7 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Get the personal access token from a local file in './../pat'
 // This PAT will be used so V.A.L.E.T. can interact with the RC API by itself, not on behalf of a specific user.
-const pat = fs.readFileSync(path.join(__dirname, '..', 'pat')).toString();
+const pat = fs.readFileSync(path.join(__dirname, '..', 'pat')).toString().trim();
 
 // Create express server
 const app = express();
