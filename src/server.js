@@ -195,8 +195,8 @@ const PROTOCOL = Cap.decoders.PROTOCOL;
 // console.log(JSON.stringify(Cap.deviceList(), null, 2));
 
 const cap = new Cap.Cap();
-// The device needs to be changed to the appropriate network device for the machine this is being run on, you can also use the IP address assigned to the machine with Cap.findDevice();
-const device = "en0"; // Cap.findDevice('10.100.2.85');
+// The device needs to be changed to the appropriate network device for the machine this is being run on, you can also use the IP address assigned to the machine with Cap.findDevice(IP_ADDRESS);
+const device = "wlan0"; // This should be 'wlan0' for a RaspberryPI and will typically will be 'en0' for a MacBook.
 
 const pcap_filter = 'arp'; // We are only interested in ARP packets - https://en.wikipedia.org/wiki/Address_Resolution_Protocol
 const bufSize = 10 * 1024 * 1024;
