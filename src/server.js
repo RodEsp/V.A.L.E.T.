@@ -4,8 +4,10 @@ import express from 'express';
 import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
 import fetch from 'node-fetch';
-import path from 'node:path';
 import fs from 'node:fs';
+import http from 'node:http';
+import https from 'node:https';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // TODO: Use a log file instead of console.log()/console.error() so that we ca debug issues if the server/computer crashes.
@@ -18,11 +20,22 @@ const pat = fs.readFileSync(path.join(__dirname, '..', 'pat')).toString().trim()
 
 // Create express server
 const app = express();
-const port = 80;
 app.use(express.static(path.join(__dirname)));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
+
+// Create HTTP server that redirects to HTTPS
+const httpServer = http.createServer((req, res) => {
+	res.writeHead(301, { 'Location': `https://${req.headers['host'].replace('80', '443')}${req.url}` });
+	res.end();
+});
+// Create HTTPS server with a self-signed certificate
+const credentials = {
+	key: fs.readFileSync('./key.pem', 'utf8'),
+	cert: fs.readFileSync('./cert.pem', 'utf8'),
+};
+const httpsServer = https.createServer(credentials, app);
 
 // Setup and configure lowdb to write data to db.json
 const file = path.join(__dirname, 'db.json');
@@ -37,7 +50,7 @@ await db.read();
 
 let rc_user = '';
 
-// Return index.html
+// Define the API for the express server
 app.get('/', (req, res) => {
 	// Reset the rc_user everytime index is reloaded.
 	rc_user = '';
@@ -133,7 +146,6 @@ app.post('/getPAT', async (req, res) => {
 
 });
 
-// Save MAC Address when a user submits it
 app.post('/macaddress', async (req, res) => {
 	const macAddress = req.body['mac-address'];
 
@@ -180,9 +192,12 @@ app.delete('/macaddress', async (req, res) => {
 	}
 });
 
-// Start server
-app.listen(port, () => {
-	console.log(`Server is running on http:;//localhost:${port}`);
+//Start servers
+httpServer.listen(80, () => {
+	console.log('HTTP Server is running on http://localhost:80');
+});
+httpsServer.listen(443, () => {
+	console.log(`HTTPS Server is running on https://localhost:443`);
 });
 
 /*

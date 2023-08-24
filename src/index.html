@@ -9,7 +9,7 @@
 			event.preventDefault();
 
 			try {
-				const response = await fetch('http://valet.recurse.com/login', { // host should be 'localhost' for local development
+				const response = await fetch('https://valet.recurse.com/login', { // host should be 'localhost' for local development
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -54,7 +54,7 @@
 			event.preventDefault();
 
 			try {
-				const response = await fetch('http://valet.recurse.com/getPAT', { // host should be 'localhost' for local development
+				const response = await fetch('https://valet.recurse.com/getPAT', { // host should be 'localhost' for local development
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -92,7 +92,7 @@
 			const formData = `mac-address=${encodeURIComponent(macAddress)}`;
 
 			try {
-				const response = await fetch('http://valet.recurse.com/macaddress', { // host should be 'localhost' for local development
+				const response = await fetch('https://valet.recurse.com/macaddress', { // host should be 'localhost' for local development
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/x-www-form-urlencoded',
@@ -130,7 +130,7 @@
 			const macAddress = li.textContent.replace('X', '').trim(); // Remove the 'X' from the button and trim whitespace
 
 			try {
-				const response = await fetch('http://valet.recurse.com/macAddress', { // host should be 'localhost' for local development
+				const response = await fetch('https://valet.recurse.com/macAddress', { // host should be 'localhost' for local development
 					method: 'DELETE',
 					headers: {
 						'Content-Type': 'application/json'

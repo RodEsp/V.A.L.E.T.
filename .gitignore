@@ -1,3 +1,5 @@
 node_modules/
 pat
 db.json
+key.pem
+cert.pem
