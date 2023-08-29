@@ -168,63 +168,75 @@
 </head>
 
 <body>
-	<div class="section">
-		<h1>V.A.L.E.T.</h1>
-		<span id="versionTag">Beta</span>
-	</div>
+	<div id="verticalCenteringDiv">
+		<div class="section">
+			<h1>V.A.L.E.T.</h1>
+			<span id="versionTag">Beta</span>
+		</div>
 
-	<div id="loginSection" class="section">
-		<h3>Login</h3>
+		<div id="loginSection" class="section">
+			<h3>Login</h3>
 
-		<form onsubmit="submitLoginForm(event);">
-			<label for="email">Enter your Recurse Center email:</label>
-			<input type="text" id="email" name="email" required>
-			<input type="submit" value="Submit">
-		</form>
-	</div>
-
-	<div id="macaddressSection" class="section hidden">
-		<h3 id="welcomeBanner"></h3>
-		<button id="logoutButton">Logout</button>
-
-		<h3 id="patTitle">Generate a Personal Access Token</h3>
-		<div id="pat-generation">
-			<form onsubmit="submitPasswordForm(event);">
-				<label for="password">Enter your Recurse Center password:</label>
-				<input type="password" id="password" name="password" required>
+			<form onsubmit="submitLoginForm(event);">
+				<label for="email">Enter your Recurse Center email:</label>
+				<input type="text" id="email" name="email" required>
 				<input type="submit" value="Submit">
 			</form>
-			<br>
-			<div class="center-text">Your password is not saved.<br>
-				We use it to generate a Personal Access Token<br>
-				that V.A.L.E.T. will use to create
-				<a target="_blank" href="https://github.com/recursecenter/wiki/wiki/Recurse-Center-API#hub-visits">Hub
-					Visits</a>
-				on your behalf.
+		</div>
+
+		<div id="macaddressSection" class="section hidden">
+			<h3 id="welcomeBanner"></h3>
+			<button id="logoutButton">Logout</button>
+
+			<h3 id="patTitle">Generate a Personal Access Token</h3>
+			<div id="pat-generation">
+				<form onsubmit="submitPasswordForm(event);">
+					<label for="password">Enter your Recurse Center password:</label>
+					<input type="password" id="password" name="password" required>
+					<input type="submit" value="Submit">
+				</form>
+				<br>
+				<div class="center-text">Your password is not saved.<br>
+					We use it to generate a Personal Access Token<br>
+					that V.A.L.E.T. will use to create
+					<a target="_blank"
+						href="https://github.com/recursecenter/wiki/wiki/Recurse-Center-API#hub-visits">Hub
+						Visits</a>
+					on your behalf.
+				</div>
 			</div>
+			<div id="pat-registered" class="hidden">&#9989; You have a registered PAT</div>
+
+			<h3 style="margin-bottom:5px">How to find your device's MAC Address</h3>
+			<p style="margin:0">Click <a
+					href="https://github.com/RodEsp/V.A.L.E.T./tree/main#how-to-find-your-devices-mac-address"
+					target="_blank">here</a> for instructions.
+				<br />
+				&#128241; For iPhones and Androids you need to turn off MAC Address randomization so
+				V.A.L.E.T. can recognize your phone correctly.
+			</p>
+
+			<h2>Register a MAC Address</h2>
+
+			<div id="pat-not-registered">&#10060; Please generate a Personal Access Token first.</div>
+
+			<div id="mac-address-registration" class="hidden">
+				<form onsubmit="submitMacAddressForm(event);">
+					<label for="mac-address">MAC Address:</label><br>
+					<input type="text" id="mac-address" name="mac-address" required
+						pattern="([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})"><br>
+					<small>Format: 00:00:00:00:00:00</small><br>
+					<span id="error-message" style="color: red;"></span><br>
+					<input type="submit" value="Submit">
+				</form>
+			</div>
+
+			<h2>Registered MAC Addresses</h2>
+
+			<ul id="macAddressList">
+
+			</ul>
 		</div>
-		<div id="pat-registered" class="hidden">&#9989; You have a registered PAT</div>
-
-		<h2>Register a MAC Address</h2>
-
-		<div id="pat-not-registered">&#10060; Please generate a Personal Access Token first.</div>
-
-		<div id="mac-address-registration" class="hidden">
-			<form onsubmit="submitMacAddressForm(event);">
-				<label for="mac-address">MAC Address:</label><br>
-				<input type="text" id="mac-address" name="mac-address" required
-					pattern="([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})"><br>
-				<small>Format: 00:00:00:00:00:00</small><br>
-				<span id="error-message" style="color: red;"></span><br>
-				<input type="submit" value="Submit">
-			</form>
-		</div>
-
-		<h2>Registered MAC Addresses</h2>
-
-		<ul id="macAddressList">
-
-		</ul>
 	</div>
 
 	<script>
