@@ -26,7 +26,7 @@ for the corresponding RCer.
 
 #### Android
 
-1. Allow V.A.L.E.T. to recognize your phone on the Recurse Center WiFi by turning off 'Private WiFi Address' for the RC network using [these instructions](https://www.howtogeek.com/722653/how-to-disable-random-wi-fi-mac-address-on-android/).
+1. Allow V.A.L.E.T. to recognize your phone on the Recurse Center WiFi by turning off 'MAC Randomization' for the RC network using [these instructions](https://www.howtogeek.com/722653/how-to-disable-random-wi-fi-mac-address-on-android/).
    > <details>
    > <summary>More info</summary>
    > Androids use a feature called <a href="https://source.android.com/docs/core/connect/wifi-mac-randomization-behavior">MAC Randomization</a> to randomize their MAC Address when they connect to a WiFi Network. Because V.A.L.E.T. uses MAC Addresses to detect when a device connects to the RC network this feature has to be turned off for the RC network. You can keep it on for every other WiFi network you connect to.

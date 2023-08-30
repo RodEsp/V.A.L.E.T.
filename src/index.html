@@ -9,7 +9,7 @@
 			event.preventDefault();
 
 			try {
-				const response = await fetch('https://valet.recurse.com/login', { // host should be 'localhost' for local development
+				const response = await fetch(`https://${window.location.hostname}/login`, { // Uses window.location.hostname so that this will work when accessing V.A.L.E.T. through localhost, a domain name, or an IP address
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -54,7 +54,7 @@
 			event.preventDefault();
 
 			try {
-				const response = await fetch('https://valet.recurse.com/getPAT', { // host should be 'localhost' for local development
+				const response = await fetch(`https://${window.location.hostname}/getPAT`, { // Uses window.location.hostname so that this will work when accessing V.A.L.E.T. through localhost, a domain name, or an IP address
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -92,7 +92,7 @@
 			const formData = `mac-address=${encodeURIComponent(macAddress)}`;
 
 			try {
-				const response = await fetch('https://valet.recurse.com/macaddress', { // host should be 'localhost' for local development
+				const response = await fetch(`https://${window.location.hostname}/macaddress`, { // Uses window.location.hostname so that this will work when accessing V.A.L.E.T. through localhost, a domain name, or an IP address
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/x-www-form-urlencoded',
@@ -130,7 +130,7 @@
 			const macAddress = li.textContent.replace('X', '').trim(); // Remove the 'X' from the button and trim whitespace
 
 			try {
-				const response = await fetch('https://valet.recurse.com/macAddress', { // host should be 'localhost' for local development
+				const response = await fetch(`https://${window.location.hostname}/macAddress`, { // Uses window.location.hostname so that this will work when accessing V.A.L.E.T. through localhost, a domain name, or an IP address
 					method: 'DELETE',
 					headers: {
 						'Content-Type': 'application/json'
@@ -177,7 +177,7 @@
 		<div id="loginSection" class="section">
 			<h3>Login</h3>
 
-			<form onsubmit="submitLoginForm(event);">
+			<form autocomplete="off" onsubmit="submitLoginForm(event);">
 				<label for="email">Enter your Recurse Center email:</label>
 				<input type="text" id="email" name="email" required>
 				<input type="submit" value="Submit">

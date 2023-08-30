@@ -32,8 +32,8 @@ const httpServer = http.createServer((req, res) => {
 });
 // Create HTTPS server with a self-signed certificate
 const credentials = {
-	key: fs.readFileSync('./key.pem', 'utf8'),
-	cert: fs.readFileSync('./cert.pem', 'utf8'),
+	key: fs.readFileSync(path.join(__dirname, '..', './key.pem'), 'utf8'),
+	cert: fs.readFileSync(path.join(__dirname, '..', './cert.pem'), 'utf8'),
 };
 const httpsServer = https.createServer(credentials, app);
 
