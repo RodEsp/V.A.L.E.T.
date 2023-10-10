@@ -50,6 +50,7 @@ h1, h2 {
 .section {
 	margin: auto;
 	width: fit-content;
+	max-width: 80%;
 	display: flex;
     flex-direction: column;
 }
