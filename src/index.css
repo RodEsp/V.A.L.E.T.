@@ -1,41 +1,44 @@
 html {
-	height:100%;
+    height:100%;
 }
 
 body {
-	margin: 0;
+    margin: 0;
     padding: 0;
     height: 100%;
     width: 100%;
-    display: flex;
-    flex-direction: column;
     justify-content: center;
 }
 
 h1, h2 {
-	margin-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+#verticalCenteringDiv {
+    display: flex;
+    flex-direction: column;
 }
 
 #versionTag {
-	font-style: italic;
-	position: relative;
+    font-style: italic;
+    position: relative;
     top: -5px;
     left: 10px;
 }
 
 #welcomeBanner {
-	width: fit-content;
-	margin-left: auto;
-	margin-right: auto;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #logoutButton {
-	width: 99%;
+    width: 99%;
     margin: auto;
 }
 
 #macAddressList {
-	list-style-type: none;
+    list-style-type: none;
 }
 
 #macAddressList>li {
@@ -44,21 +47,21 @@ h1, h2 {
 }
 
 #macAddressList>li>button {
-	line-height: 85%;
+    line-height: 85%;
 }
 
 .section {
-	margin: auto;
-	width: fit-content;
-	max-width: 80%;
-	display: flex;
+    margin: auto;
+    width: fit-content;
+    max-width: 80%;
+    display: flex;
     flex-direction: column;
 }
 
 .hidden {
-	display: none !important;
+    display: none !important;
 }
 
 .center-text {
-	text-align: center;
+    text-align: center;
 }
