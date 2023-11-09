@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import type { AuthOptions } from 'next-auth';
 
-export const authOptions: AuthOptions = {
+const authOptions: AuthOptions = {
 	// Configure one or more authentication providers
 	providers: [
 		{
@@ -39,14 +39,14 @@ export const authOptions: AuthOptions = {
 			else if (new URL(url).origin === baseUrl) return url;
 			return baseUrl;
 		},
-		async session({ session, token, user }) {
-			console.log('SESSION CHECKED');
-			// Send properties to the client, like an access_token and user id from a provider.
-			session.accessToken = token.accessToken;
-			session.user.id = token.id;
+		// async session({ session, token, user }) {
+		// 	console.log('SESSION CHECKED');
+		// 	// Send properties to the client, like an access_token and user id from a provider.
+		// 	session.accessToken = token.accessToken;
+		// 	session.user.id = token.id;
 
-			return session;
-		}
+		// 	return session;
+		// }
 	}
 };
 
