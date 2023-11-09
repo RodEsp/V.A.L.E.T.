@@ -2,6 +2,20 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
+### Prereqs
+
+- `npm install`
+- `.env.local` - create a file named `.env.local` at the root of your app with the following content:
+
+  ```bash
+  NEXTAUTH_URL='http://localhost:3000/'
+  NEXTAUTH_SECRET='INSERT_SECERT_HERE' # should be unique to your runtime - generate it with `openssl rand -base64 32`
+  RC_OAUTH_CLIENT_ID='INSERT_ID_FROM_RC_OAUTH_APP_SETTINGS'
+  RC_OAUTH_CLIENT_SECRET='INSERT_SECRET_FROM_RC_OAUTH_APP_SETTINGS'
+  ```
+
+### Running
+
 First, run the development server:
 
 ```bash
