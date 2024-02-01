@@ -39,8 +39,15 @@ async function fetchDataUntilDate (targetDate) {
 	return valetVisits;
 }
 
-// Example of usage:
-const since = '2023-08-23';
+
+let date = Date.parse(process.argv[2]);
+let since = '2023-08-03';
+
+if (date) {
+  since = new Intl.DateTimeFormat('en-US', {year:'numeric', month:'2-digit', day:'2-digit', timeZone:'UTC'}).format(date);
+  console.log(since);
+}
+
 fetchDataUntilDate(since)
 	.then(data => console.log(`Total V.A.L.E.T. visits since ${new Date(since).toDateString()}: ${data.length}`))
 	.catch(error => console.error("Error fetching data: ", error));
