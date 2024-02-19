@@ -1,5 +1,6 @@
 // TODO: Figure out how to use a custom signing page
 // Might have to wait until next-auth support Next.js's App Router with v5.
+'use client';
 
 import Header from '@/app/components/header';
 
