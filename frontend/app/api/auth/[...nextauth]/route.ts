@@ -43,7 +43,7 @@ const handler = NextAuth({
 			return baseUrl;
 		},
 		async session({ session, token, user }) {
-			console.log(`SESSION CHECKED\n ${JSON.stringify(session, null, 2)}`);
+			// console.log(`SESSION CHECKED\n ${JSON.stringify(session, null, 2)}`);
 			return session;
 		}
 	}
