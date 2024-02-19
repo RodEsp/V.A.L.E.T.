@@ -7,7 +7,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <Providers>
-          <main className="dark min-h-screen flex flex-col items-center justify-center text-2xl">
+          <main className="dark min-h-screen text-2xl">
             {children}
           </main >
         </Providers>
