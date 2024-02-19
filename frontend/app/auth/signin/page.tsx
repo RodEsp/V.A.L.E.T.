@@ -1,4 +1,5 @@
-'use client';
+// TODO: Figure out how to use a custom signing page
+// Might have to wait until next-auth support Next.js's App Router with v5.
 
 import Header from '@/app/components/header';
 
@@ -12,11 +13,11 @@ export default async function SignIn() {
 	return (
 		<>
 			<Header />
-			<Spacer y={5} />
+			<Spacer />
 			{Object.values(providers as Object).map((provider) => (
-				<div key={provider.name}>
-					<Button onClick={() => signIn(provider.id)}>
-						Sign in with {provider.name}
+				<div key='Recurse Center'>
+					<Button onClick={() => signIn('recurse')}>
+						Sign in with RC
 					</Button>
 				</div>
 			))}
