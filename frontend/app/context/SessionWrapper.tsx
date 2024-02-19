@@ -2,13 +2,8 @@
 
 import { NextUIProvider } from '@nextui-org/react';
 import { SessionProvider } from 'next-auth/react';
-import { ReactNode } from 'react';
 
-export default function Providers({
-	children,
-}: {
-	children: ReactNode;
-}) {
+export default function SessionWrapper({children}: {children: React.ReactNode}) {
 	return (
 		<SessionProvider>
 			<NextUIProvider>
