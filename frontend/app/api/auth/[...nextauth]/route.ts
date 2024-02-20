@@ -1,4 +1,5 @@
 import NextAuth from 'next-auth';
+import clientPromise from "../../../db/mongodb";
 
 const handler = NextAuth({
 	theme: {
@@ -27,15 +28,23 @@ const handler = NextAuth({
 		}
 	],
 	callbacks: {
-		async signIn({ user, account, profile }) {
-			console.log(`Signed in
-			User: ${!!user}
-			Account: ${!!account}
-			Profile: ${!!profile}`);
-			return !!profile ? true : false;
+		async signIn(params) {
+			// console.log(`Signed in
+			// ${JSON.stringify(params, null, 4)}`);
+			let mongo_client;
+			try {
+				mongo_client = await clientPromise;
+				const db = mongo_client.db("admin");
+				console.log(await db.command({ping:1}));
+			} catch (e) {
+				console.error("Could not establish a connection to MongoDB");
+				console.error(e);
+			}
+
+			return !!params.profile ? true : false;
 		},
 		async redirect({ url, baseUrl }) {
-			console.log(`REDIRECTED\n URL = ${url}\n BaseURL = ${baseUrl}`);
+			// console.log(`REDIRECTED\n URL = ${url}\n BaseURL = ${baseUrl}`);
 			// Allows relative callback URLs;
 			if (url.startsWith("/")) return `${baseUrl}${url}`;
 			// Allows callback URLs on the same origin
