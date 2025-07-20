@@ -12,8 +12,11 @@
   "license": "MIT",
   "dependencies": {
     "cap": "^0.2.1",
-    "express": "^4.18.2",
-    "lowdb": "^6.0.1",
+    "express": "^5.1.0",
+    "lowdb": "^7.0.1",
     "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2"
   }
 }
