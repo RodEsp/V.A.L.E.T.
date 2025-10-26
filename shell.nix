@@ -7,10 +7,10 @@ pkgs.mkShell {
     gcc
   ];
 
-  # Set the environmetn variables requires for compliation
+  # Set the environment variables required for compliation
   shellHook = ''
-    export CPATH="{$pkgs.libpcap}/include"
+    export CPATH="${pkgs.libpcap}/include"
     export LIBRARY_PATH="${pkgs.libpcap}/lib"
-    export LB_LIBRARY_PATH="${pkgs.libpcap}/lib"
+    export LD_LIBRARY_PATH="${pkgs.libpcap}/lib"
   '';
 }
